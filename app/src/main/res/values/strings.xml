@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">D2D_App</string>
+    <string name="wifion">WIFI ON</string>
+    <string name="discover">DISCOVER</string>
+    <string name="send">SEND</string>
+    <string name="message">Message</string>
+    <string name="status">Connection Status</string>
+    <string name="back">BACK</string>
+    <string name="chat">CHAT</string>
+    <string name="call">TALK</string>
+    <string name="localPort">LocalPort</string>
+    <string name="ipHint">IP</string>
+    <string name="portHint">Port</string>
+    <string name="connect">CONNECT</string>
+    <string name="disconnect">DISCONNECT</string>
+    <string name="phone_voip_incompatible">Incompatible VOIP</string>
+    <string name="ripple">Ripple</string>
+    <string name="connection_status">Connection Status</string>
+    <string name="backDis">BACK</string>
+    <string name="ripples">Ripples</string>
+    <string name="hello">Hello</string>
+</resources>

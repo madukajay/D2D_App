@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".chatActivity">
+
+<Button
+    android:id="@+id/back"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="150dp"
+    android:layout_centerHorizontal="true"
+    android:text="@string/back" />
+
+<TextView
+    android:id="@+id/readchatMsg"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignParentEnd="true"
+    android:layout_alignParentStart="true"
+    android:layout_marginTop="250dp"
+    android:text="@string/message"
+    android:textAlignment="center"
+    android:textSize="20sp"
+    android:textStyle="italic" />
+
+    <EditText
+        android:id="@+id/writechatMsg"
+        android:layout_width="248dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="80dp"
+        android:layout_marginEnd="80dp"
+        android:layout_marginBottom="200dp"
+        android:autofillHints=""
+        android:ems="10"
+        android:inputType="textPersonName"
+        tools:ignore="LabelFor" />
+
+    <Button
+        android:id="@+id/sendchatButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="162dp"
+        android:layout_marginEnd="162dp"
+        android:layout_marginBottom="113dp"
+        android:text="@string/send" />
+
+</RelativeLayout>
