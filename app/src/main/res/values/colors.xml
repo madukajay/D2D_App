@@ -4,4 +4,10 @@
     <color name="colorPrimaryDark">#3700B3</color>
     <color name="colorAccent">#03DAC5</color>
     <color name="rippelColor">#0099CC</color>
+    <color name="primaryDark">#292b3d</color>
+    <color name="starBlue">#09c6df</color>
+    <color name="darkBlue">#0A0545</color>
+    <color name="endBlue">#0bcce6</color>
+    <color name="graylight">#fafafa</color>
+    <color name="gray">#a9a9a9</color>
 </resources>

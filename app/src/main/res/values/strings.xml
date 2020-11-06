@@ -6,7 +6,7 @@
     <string name="message">Message</string>
     <string name="status">Connection Status</string>
     <string name="back">BACK</string>
-    <string name="chat">CHAT</string>
+    <string name="chat">Chat</string>
     <string name="call">TALK</string>
     <string name="localPort">LocalPort</string>
     <string name="ipHint">IP</string>
@@ -19,4 +19,7 @@
     <string name="backDis">BACK</string>
     <string name="ripples">Ripples</string>
     <string name="hello">Hello</string>
+    <string name="scan">Scan</string>
+    <string name="talk">Talk</string>
+    <string name="caller">Caller</string>
 </resources>

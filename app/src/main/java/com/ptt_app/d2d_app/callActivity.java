@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -13,17 +16,35 @@ import java.net.Socket;
 
 public class callActivity extends AppCompatActivity {
 
-    Button backBtn, talkBtn;
+    ImageView backBtn;
+    ToggleButton talkBtn;
+    TextView callertxt;
     Socket sckt;
     private MainConversation audioClient;
+    String caller;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_call);
-        backBtn = (Button) findViewById(R.id.backBtn);
-        talkBtn = (Button) findViewById(R.id.talkBtn);
+
+        if (savedInstanceState == null) {
+            Bundle extras = getIntent().getExtras();
+            if(extras == null) {
+                caller= null;
+            } else {
+                caller= extras.getString("CALLER_NAME");
+            }
+        } else {
+            caller= (String) savedInstanceState.getSerializable("CALLER_NAME");
+        }
+
+        backBtn = (ImageView) findViewById(R.id.backBtn);
+        talkBtn = (ToggleButton) findViewById(R.id.talkBtn);
+        callertxt = (TextView)findViewById(R.id.caller);
+        callertxt.setText(caller);
+
         audioClient = new MainConversation();
 
         sckt = SocketHandler.getSocket();
@@ -56,6 +77,8 @@ public class callActivity extends AppCompatActivity {
                 startActivity(mIntent);
             }
         });
+
+
     }
 
     @Override

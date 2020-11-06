@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -22,19 +23,35 @@ public class chatActivity extends AppCompatActivity {
 
     static final int MESSAGE_READ = 1;
     TextView readmsg;
-    Button btnBack, btnSend;
+    ImageView btnBack, btnSend;
     EditText wtMsg;
     SendReceiveMessage sendReceiveMessage;
+    TextView chatcallertxt;
+    String temp;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+
+        if (savedInstanceState == null) {
+            Bundle extras = getIntent().getExtras();
+            if(extras == null) {
+                temp= null;
+            } else {
+                temp= extras.getString("CHAT_NAME");
+            }
+        } else {
+            temp= (String) savedInstanceState.getSerializable("CHAT_NAME");
+        }
+
         readmsg = (TextView) findViewById(R.id.readchatMsg);
-        btnSend = (Button) findViewById(R.id.sendchatButton);
-        btnBack = (Button) findViewById(R.id.back);
+        btnSend = (ImageView) findViewById(R.id.sendchatButton);
+        btnBack = (ImageView) findViewById(R.id.chatbackBtn);
         wtMsg = (EditText) findViewById(R.id.writechatMsg);
+        chatcallertxt = (TextView) findViewById(R.id.chatcaller);
+        chatcallertxt.setText(temp);
 
         Socket socket = SocketHandler.getSocket();
         sendReceiveMessage = new chatActivity.SendReceiveMessage(socket);

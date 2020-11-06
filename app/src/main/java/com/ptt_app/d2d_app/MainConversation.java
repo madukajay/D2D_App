@@ -10,6 +10,9 @@ import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
+import android.media.audiofx.AcousticEchoCanceler;
+import android.media.audiofx.AutomaticGainControl;
+import android.media.audiofx.NoiseSuppressor;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -89,6 +92,7 @@ public class MainConversation extends AppCompatActivity {
     public void stopRecording() {
         if (recorder != null) {
             isRecording = false;
+            Log.e("AUDIO", "Recorder is still recording");
             recorder.stop();
         }
     }
@@ -150,10 +154,10 @@ public class MainConversation extends AppCompatActivity {
         //Release resources for audio objects
         track.release();
         recorder.release();
-    }
+           }
 
-    // Setter for socket object
-    public void setSocket(Socket socket) {
+// Setter for socket object
+public void setSocket(Socket socket) {
         this.socket = socket;
-    }
-}
+        }
+        }

@@ -17,25 +17,19 @@ import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.os.StrictMode;
 import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -49,13 +43,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private static final String TAG = "MainActivity";
     private static final int SEPRATION_DIST_THRESHOLD = 50;
-    Button btnOnOff;
-    Button btnDiscover;
-    Button btnChat;
-    Button btnCall;
-    Button ripple;
-    ListView listvw;
-    TextView readmsg, status;
+    ImageView btnChat;
+    ImageView btnTalk;
+    ImageView btnScan;
+
+    TextView status;
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
     private boolean permissionToRecordAccepted = false;
     private String [] permissions = {Manifest.permission.RECORD_AUDIO};
@@ -68,15 +60,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
     ArrayList<Point> device_points = new ArrayList<>();
     ArrayList<CustomDevice> custom_peers = new ArrayList<>();
-    String[] deviceNameArray;
-    WifiP2pDevice[] deviceArray;
+    private ArrayList<Socket> clients = new ArrayList<>();
 
-    static final int MESSAGE_READ = 1;
-    ServerClass serverClass;
+    //ServerClass serverClass;
     ClientClass clientClass;
+    boolean groupFormed = false;
 
     RippleBackground rippleBackground;
     ImageView imageView;
+    String device_name;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,8 +83,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
                     .permitAll().build();
             StrictMode.setThreadPolicy(policy);
-            //your codes here
-
         }
         initialWork();
         wifi_listener();
@@ -101,34 +93,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
-        ripple.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //Intent rippleIntent = new Intent(getApplicationContext(), DiscoverActivity.class);
-                //startActivity(rippleIntent);
-                rippleBackground.stopRippleAnimation();
-            }
-        });
     }
-
-    Handler handler = new Handler(new Handler.Callback() {
-        @Override
-        public boolean handleMessage(@NonNull Message msg) {
-            switch (msg.what){
-                case MESSAGE_READ:
-                    byte[] readBuff = (byte[]) msg.obj;
-                    String tempMsg = new String(readBuff, 0, msg.arg1);
-                    readmsg.setText(tempMsg);
-                    break;
-            }
-            return true;
-        }
-    });
 
 
     @SuppressLint("ClickableViewAccessibility")
     private void wifi_listener() {
-        btnOnOff.setOnClickListener(new View.OnClickListener() {
+        /*btnOnOff.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (wifiManager.isWifiEnabled()){
@@ -140,33 +110,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     btnOnOff.setText("OFF");
                 }
             }
-        });
+        });*/
 
-        btnDiscover.setOnClickListener(new View.OnClickListener() {
+        btnScan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                rippleBackground.startRippleAnimation();
                 discoverPeersTillSuccess();
-            }
-        });
-
-        listvw.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int i, long id) {
-                final WifiP2pDevice device =  deviceArray[i];
-                WifiP2pConfig config = new WifiP2pConfig();
-                config.deviceAddress = device.deviceAddress;
-
-                mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
-                    @Override
-                    public void onSuccess() {
-                        Toast.makeText(getApplicationContext(), "Connected to "+device.deviceName, Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onFailure(int reason) {
-                        Toast.makeText(getApplicationContext(), "Not Connected", Toast.LENGTH_SHORT).show();
-                    }
-                });
             }
         });
 
@@ -174,15 +124,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onClick(View v) {
                 Intent chatintent = new Intent(getApplicationContext(), chatActivity.class);
+                chatintent.putExtra("CHAT_NAME",device_name);
                 startActivity(chatintent);
 
             }
         });
 
-        btnCall.setOnClickListener(new View.OnClickListener() {
+        btnTalk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //Intent callIntent = new Intent(getApplicationContext(), callActivity.class);
                 Intent callIntent = new Intent(getApplicationContext(), callActivity.class);
+                callIntent.putExtra("CALLER_NAME",device_name);
                 startActivity(callIntent);
             }
         });
@@ -208,18 +161,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     private void initialWork(){
-        btnOnOff = (Button) findViewById(R.id.onOff);
-        btnDiscover = (Button) findViewById(R.id.discover);
-        listvw = (ListView) findViewById(R.id.peerListView);
         status = (TextView) findViewById(R.id.connectionStatus);
-        btnChat = (Button) findViewById(R.id.chat);
-        btnCall = (Button) findViewById(R.id.call);
-        ripple = (Button) findViewById(R.id.ripple);
+        btnChat = (ImageView) findViewById(R.id.chatBtn);
+        btnTalk = (ImageView) findViewById(R.id.talkBtn);
         rippleBackground=(RippleBackground)findViewById(R.id.content);
         imageView=(ImageView)findViewById(R.id.centerImage);
+        btnScan=(ImageView)findViewById(R.id.scanBtn);
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
         mManager = (WifiP2pManager) getSystemService(WIFI_P2P_SERVICE);
+        assert mManager != null;
         mChannel = mManager.initialize(this, getMainLooper(), null);
         mReceiver = new WiFiP2PBroadcastReceiver(mManager, mChannel, this);
         mIntentFilter = new IntentFilter();
@@ -262,34 +213,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         rippleBackground.addView(tmp_device);
                         foundDevice(tmp_device);
 
-                        CustomDevice tmp_device_obj = new CustomDevice();
-                        tmp_device_obj.deviceName = device.deviceName;
-                        tmp_device_obj.id = tmp_device.getId();
-                        tmp_device_obj.device = device;
-                        tmp_device_obj.icon_view = tmp_device;
+                        CustomDevice new_device = new CustomDevice();
+                        new_device.deviceName = device.deviceName;
+                        new_device.id = tmp_device.getId();
+                        new_device.device = device;
+                        new_device.icon_view = tmp_device;
 
-                        custom_peers.add(tmp_device_obj);
+                        custom_peers.add(new_device);
                     }
                 }
-
-                peers.clear();
-                peers.addAll(peerList.getDeviceList());
-
-                deviceNameArray = new String[peerList.getDeviceList().size()];
-                deviceArray = new WifiP2pDevice[peerList.getDeviceList().size()];
-                int index = 0;
-                for (WifiP2pDevice device: peerList.getDeviceList()){
-                    deviceNameArray[index] = device.deviceName;
-                    deviceArray[index] = device;
-                    index++;
-                }
-
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,deviceNameArray);
-                listvw.setAdapter(adapter);
             }
 
             if(peers.size()==0){
-                Toast.makeText(getApplicationContext(), "No Devices Found", Toast.LENGTH_SHORT);
+                Toast.makeText(getApplicationContext(), "No Devices Found", Toast.LENGTH_SHORT).show();
             }
 
         }
@@ -301,8 +237,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             final InetAddress groupOwneraddress = info.groupOwnerAddress;
             if(info.groupFormed && info.isGroupOwner){
                 status.setText("HOST");
+                ServerClass serverClass;
                 serverClass = new ServerClass();
                 serverClass.start();
+                Log.d("CONNECTWIFI", "Connected>>>>>>>>>>>");
             }else if(info.groupFormed){
                 status.setText("CLIENT");
                 clientClass = new ClientClass(groupOwneraddress);
@@ -336,11 +274,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 @Override
                 public void onSuccess() {
                     Toast.makeText(getApplicationContext(), "Connected to "+device.deviceName, Toast.LENGTH_SHORT).show();
+                    device_name = device.deviceName;
                 }
 
                 @Override
                 public void onFailure(int reason) {
                     Toast.makeText(getApplicationContext(), "Error in connecting to "+device.deviceName, Toast.LENGTH_SHORT).show();
+                    device_name = device.deviceName;
                 }
             });
         }/*else{
@@ -373,6 +313,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             try {
                 serverSocket = new ServerSocket(8888);
                 socket = serverSocket.accept();
+                clients.add(socket);
+                Log.d("CONNECTWIFI", socket.getInetAddress().toString());
                 SocketHandler.setSocket(socket);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -473,7 +415,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         return -1;
     }
-
 }
 
 class CustomDevice{
