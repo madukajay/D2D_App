@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class chatActivity extends AppCompatActivity {
 
@@ -54,6 +55,8 @@ public class chatActivity extends AppCompatActivity {
         chatcallertxt.setText(temp);
 
         Socket socket = SocketHandler.getSocket();
+        final ArrayList<Socket> sockets = SocketHandler.getSockets();
+        final OutputStream[] outputStream = new OutputStream[5];
         sendReceiveMessage = new chatActivity.SendReceiveMessage(socket);
         sendReceiveMessage.start();
 
@@ -61,7 +64,16 @@ public class chatActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 String msg = wtMsg.getText().toString();
-                sendReceiveMessage.write(msg.getBytes());
+                //sendReceiveMessage.write(msg.getBytes());
+                for (int i = 0; i< sockets.size();i++){
+                    try {
+                        outputStream[i] = sockets.get(i).getOutputStream();
+                        outputStream[i].write(msg.getBytes());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
             }
         });
 

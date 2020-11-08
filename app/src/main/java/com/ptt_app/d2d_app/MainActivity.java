@@ -63,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ArrayList<Socket> clients = new ArrayList<>();
 
     //ServerClass serverClass;
+    ServerSocket serverSocket;
     ClientClass clientClass;
     boolean groupFormed = false;
 
@@ -235,12 +236,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void onConnectionInfoAvailable(WifiP2pInfo info) {
             final InetAddress groupOwneraddress = info.groupOwnerAddress;
-            if(info.groupFormed && info.isGroupOwner){
+            if(info.groupFormed && info.isGroupOwner && !groupFormed){
                 status.setText("HOST");
-                ServerClass serverClass;
-                serverClass = new ServerClass();
-                serverClass.start();
-                Log.d("CONNECTWIFI", "Connected>>>>>>>>>>>");
+                /*serverClass = new ServerClass();
+                serverClass.start();*/
+                try {
+                    serverSocket = new ServerSocket(8888);
+                    groupFormed = true;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                Socket socket;
+                try {
+                    socket = serverSocket.accept();
+                    clients.add(socket);
+                    Log.d("CONNECTWIFI", socket.getInetAddress().toString());
+                    SocketHandler.setSocket(socket);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }else if(info.groupFormed && info.isGroupOwner && groupFormed){
+                Socket socket;
+                try {
+                    socket = serverSocket.accept();
+                    clients.add(socket);
+                    Log.d("CONNECTWIFI", socket.getInetAddress().toString());
+                    SocketHandler.setSocket(socket);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }else if(info.groupFormed){
                 status.setText("CLIENT");
                 clientClass = new ClientClass(groupOwneraddress);
@@ -304,7 +328,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    public class ServerClass extends Thread{
+    /*public class ServerClass extends Thread{
         Socket socket;
         ServerSocket serverSocket;
 
@@ -320,7 +344,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 e.printStackTrace();
             }
         }
-    }
+    }*/
 
     public class ClientClass extends Thread{
         Socket socket;
