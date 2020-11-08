@@ -29,6 +29,7 @@ public class chatActivity extends AppCompatActivity {
     SendReceiveMessage sendReceiveMessage;
     TextView chatcallertxt;
     String temp;
+    ArrayList<Socket> sockets;
 
 
     @Override
@@ -55,10 +56,14 @@ public class chatActivity extends AppCompatActivity {
         chatcallertxt.setText(temp);
 
         Socket socket = SocketHandler.getSocket();
-        final ArrayList<Socket> sockets = SocketHandler.getSockets();
+        sockets = SocketHandler.getSockets();
         final OutputStream[] outputStream = new OutputStream[5];
-        sendReceiveMessage = new chatActivity.SendReceiveMessage(socket);
-        sendReceiveMessage.start();
+        final SendReceiveMessage[] sendReceiveMessage = new SendReceiveMessage[5];;
+
+        for (int i = 0; i< sockets.size();i++){
+                sendReceiveMessage[i] = new chatActivity.SendReceiveMessage(sockets.get(i));
+                sendReceiveMessage[i].start();
+        }
 
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -80,7 +85,7 @@ public class chatActivity extends AppCompatActivity {
         btnBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sendReceiveMessage.interrupt();
+                //sendReceiveMessage.interrupt();
                 Intent mIntent = new Intent(getApplicationContext(), MainActivity.class);
                 startActivity(mIntent);
             }
@@ -91,11 +96,22 @@ public class chatActivity extends AppCompatActivity {
     Handler handler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(@NonNull Message msg) {
+            final OutputStream[] outputStream = new OutputStream[5];
             switch (msg.what){
                 case MESSAGE_READ:
                     byte[] readBuff = (byte[]) msg.obj;
                     String tempMsg = new String(readBuff, 0, msg.arg1);
                     readmsg.setText(tempMsg);
+                    if (SocketHandler.getclientSize() > 1){
+                        for (int i = 0; i< sockets.size();i++){
+                            try {
+                                outputStream[i] = sockets.get(i).getOutputStream();
+                                outputStream[i].write(tempMsg.getBytes());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
                     break;
             }
             return true;
@@ -111,7 +127,7 @@ public class chatActivity extends AppCompatActivity {
             socket = sckt;
             try {
                 inputStream = socket.getInputStream();
-                outputStream = socket.getOutputStream();
+                //outputStream = socket.getOutputStream();
             }catch (IOException e){
                 e.printStackTrace();
             }

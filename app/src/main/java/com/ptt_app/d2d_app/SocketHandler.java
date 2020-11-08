@@ -19,4 +19,8 @@ public class SocketHandler {
         SocketHandler.socket = socket;
         SocketHandler.sockets.add(socket);
     }
+
+    public static int getclientSize(){
+        return sockets.size();
+    }
 }
