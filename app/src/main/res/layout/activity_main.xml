@@ -37,7 +37,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="horizontal"
-                android:weightSum="3"
+                android:weightSum="4"
                 android:background="@color/graylight">
                 <LinearLayout
                     android:gravity="center"
@@ -107,6 +107,30 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/chat"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/starBlue"/>
+                </LinearLayout>
+                <LinearLayout
+                    android:gravity="center"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="15dp"
+                        android:src="@drawable/reset"
+                        android:tint="@color/starBlue"
+                        android:id="@+id/resetBtn"
+                        />
+                    <TextView
+                        android:paddingTop="10dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/reset"
                         android:textSize="20sp"
                         android:textStyle="bold"
                         android:textColor="@color/starBlue"/>

@@ -23,4 +23,9 @@ public class SocketHandler {
     public static int getclientSize(){
         return sockets.size();
     }
+
+    public static void clearSockets(){
+        sockets.clear();
+        sockets.trimToSize();
+    }
 }

@@ -23,10 +23,11 @@ import java.util.ArrayList;
 public class chatActivity extends AppCompatActivity {
 
     static final int MESSAGE_READ = 1;
-    TextView readmsg;
+    static TextView readmsg;
     ImageView btnBack, btnSend;
     EditText wtMsg;
-    SendReceiveMessage sendReceiveMessage;
+    //SendReceiveMessage sendReceiveMessage;
+    ArrayList <SendReceiveMessage> sendReceiveMessage;
     TextView chatcallertxt;
     String temp;
     ArrayList<Socket> sockets;
@@ -55,14 +56,18 @@ public class chatActivity extends AppCompatActivity {
         chatcallertxt = (TextView) findViewById(R.id.chatcaller);
         chatcallertxt.setText(temp);
 
-        Socket socket = SocketHandler.getSocket();
+        //Socket socket = SocketHandler.getSocket();
         sockets = SocketHandler.getSockets();
         final OutputStream[] outputStream = new OutputStream[5];
-        final SendReceiveMessage[] sendReceiveMessage = new SendReceiveMessage[5];;
+        sendReceiveMessage = new ArrayList<SendReceiveMessage>();
 
         for (int i = 0; i< sockets.size();i++){
-                sendReceiveMessage[i] = new chatActivity.SendReceiveMessage(sockets.get(i));
-                sendReceiveMessage[i].start();
+            Log.d("CONNECTWIFI", "Socket " + i + sockets.get(i).getInetAddress().toString() + ".");
+        }
+
+        for (int i = 0; i< sockets.size();i++){
+                sendReceiveMessage.add(new chatActivity.SendReceiveMessage(sockets.get(i)));
+                sendReceiveMessage.get(i).start();
         }
 
         btnSend.setOnClickListener(new View.OnClickListener() {
@@ -74,8 +79,11 @@ public class chatActivity extends AppCompatActivity {
                     try {
                         outputStream[i] = sockets.get(i).getOutputStream();
                         outputStream[i].write(msg.getBytes());
+                        Log.d("CONNECTWIFI", "Sent msg");
+                        outputStream[i].flush();
                     } catch (IOException e) {
                         e.printStackTrace();
+                        Log.d("CONNECTWIFI", "in sendData() input and output stream creation failed:" + e.getMessage() + ".");
                     }
                 }
 
@@ -99,8 +107,10 @@ public class chatActivity extends AppCompatActivity {
             final OutputStream[] outputStream = new OutputStream[5];
             switch (msg.what){
                 case MESSAGE_READ:
+                    //Log.d("CONNECTWIFI", "Handler Triggers ");
                     byte[] readBuff = (byte[]) msg.obj;
                     String tempMsg = new String(readBuff, 0, msg.arg1);
+                    Log.d("CONNECTWIFI", tempMsg);
                     readmsg.setText(tempMsg);
                     if (SocketHandler.getclientSize() > 1){
                         for (int i = 0; i< sockets.size();i++){
@@ -119,6 +129,7 @@ public class chatActivity extends AppCompatActivity {
     });
 
     private class SendReceiveMessage extends Thread{
+        private volatile boolean flag = true;
         private Socket socket;
         private InputStream inputStream;
         private OutputStream outputStream;
@@ -137,17 +148,29 @@ public class chatActivity extends AppCompatActivity {
             byte[] buffer = new byte[1024];
             int bytes;
 
-            while (socket!=null){
-                try {
-                    bytes = inputStream.read(buffer);
-                    if (bytes>0){
-                        handler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget();
+            while (flag){
+                while (socket != null) {
+                    try {
+                        bytes = socket.getInputStream().read(buffer);
+                        if (bytes > 0) {
+                            handler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget();
+                            Log.d("CONNECTWIFI", "run: receivers count "+sendReceiveMessage.size());
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
 
+                }
             }
+        }
+        public void stopRunning()
+        {
+            flag = false;
+        }
+
+        public void startRunning()
+        {
+            flag = true;
         }
 
         public void write(byte[] bytes)
@@ -156,8 +179,24 @@ public class chatActivity extends AppCompatActivity {
                 outputStream.write(bytes);
             } catch (IOException e) {
                 e.printStackTrace();
-                Log.d("Fatal Error", "in sendData() input and output stream creation failed:" + e.getMessage() + ".");
+                Log.d("CONNECTWIFI", "in sendData() input and output stream creation failed:" + e.getMessage() + ".");
             }
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        for (int i = 0; i< sockets.size();i++){
+            sendReceiveMessage.get(i).stopRunning();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        for (int i = 0; i< sockets.size();i++){
+            sendReceiveMessage.get(i).startRunning();
         }
     }
 }

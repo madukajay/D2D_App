@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Point;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     ImageView btnChat;
     ImageView btnTalk;
     ImageView btnScan;
+    ImageView btnReset;
 
     TextView status;
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
@@ -125,7 +127,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onClick(View v) {
                 Intent chatintent = new Intent(getApplicationContext(), chatActivity.class);
                 chatintent.putExtra("CHAT_NAME",device_name);
-                startActivity(chatintent);
+                rippleBackground.stopRippleAnimation();
+                startActivity(chatintent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP));
 
             }
         });
@@ -136,11 +139,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 //Intent callIntent = new Intent(getApplicationContext(), callActivity.class);
                 Intent callIntent = new Intent(getApplicationContext(), callActivity.class);
                 callIntent.putExtra("CALLER_NAME",device_name);
-                startActivity(callIntent);
+                startActivity(callIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP));
             }
         });
 
+        btnReset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mManager.removeGroup(mChannel, new WifiP2pManager.ActionListener() {
+                    @Override
+                    public void onSuccess() {
+                        Toast.makeText(getApplicationContext(), "Group Removed", Toast.LENGTH_SHORT).show();
+                    }
 
+                    @Override
+                    public void onFailure(int reason) {
+                        Toast.makeText(getApplicationContext(), "Group Removed", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                peers.clear();
+                device_points.clear();
+                custom_peers.clear();
+                clients.clear();
+                clients.trimToSize();
+                SocketHandler.clearSockets();
+            };
+        });
     }
 
 
@@ -164,6 +188,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         status = (TextView) findViewById(R.id.connectionStatus);
         btnChat = (ImageView) findViewById(R.id.chatBtn);
         btnTalk = (ImageView) findViewById(R.id.talkBtn);
+        btnReset = (ImageView) findViewById(R.id.resetBtn);
         rippleBackground=(RippleBackground)findViewById(R.id.content);
         imageView=(ImageView)findViewById(R.id.centerImage);
         btnScan=(ImageView)findViewById(R.id.scanBtn);
@@ -251,6 +276,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     try {
                         socket = serverSocket.accept();
                         clients.add(socket);
+                        Log.d("CONNECTWIFI", "Clent Array Size: " +clients.size());
                         Log.d("CONNECTWIFI", socket.getInetAddress().toString());
                         SocketHandler.setSocket(socket);
                     } catch (IOException e) {
@@ -262,6 +288,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 try {
                     socket = serverSocket.accept();
                     clients.add(socket);
+                    Log.d("CONNECTWIFI", "Clent Array Size: " +clients.size());
                     Log.d("CONNECTWIFI", socket.getInetAddress().toString());
                     SocketHandler.setSocket(socket);
                 } catch (IOException e) {
@@ -276,6 +303,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 try {
                     socket.connect(new InetSocketAddress(hostAddress, 8888), 500);
                     clients.add(socket);
+                    Log.d("CONNECTWIFI", "Clent Array Size: " +clients.size());
+                    Log.d("CONNECTWIFI", socket.getInetAddress().toString());
                     SocketHandler.setSocket(socket);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -339,7 +368,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         return -1;
     }
-
 
     public class ServerClass extends Thread{
         Socket socket;
